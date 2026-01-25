@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>合肥工业大学校园风景介绍一览</title>
+  <!-- 引入Vue 3（原生CDN，无需额外配置） -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <!-- 引入Font Awesome（图标无错乱，适配所有场景） -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <style>
+    /* 全局核心样式（深红色+白色，简洁无冗余） */
+    :root {
+      --hfut-red: #8B0000; /* 合工大标准深红色 */
+      --hfut-white: #FFFFFF;
+      --hfut-gray: #F5F5F5;
+      --transition: all 0.3s ease;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      scroll-behavior: smooth; /* 平滑跳转 */
+    }
+    body {
+      font-family: 'Microsoft YaHei', sans-serif;
+      background: var(--hfut-white);
+      color: #333;
+      overflow-x: hidden;
+    }
+
+    /* 校训动画（初登录闪过，4秒结束） */
+    .motto-animation {
+      position: fixed;
+      inset: 0;
+      background: var(--hfut-white);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeOut 4s ease-in-out forwards;
+    }
+    @keyframes fadeOut {
+      0% { opacity: 0; transform: scale(0.9); }
+      20% { opacity: 1; transform: scale(1.05); }
+      80% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.9); visibility: hidden; }
+    }
+    .motto-text {
+      font-size: 4rem;
+      font-weight: 700;
+      color: var(--hfut-red);
+      letter-spacing: 0.5rem;
+    }
+
+    /* 导航栏（简洁标题，点击激活，无错乱） */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: var(--hfut-white/95);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 90;
+      transition: var(--transition);
+    }
+    .navbar-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0.8rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--hfut-red);
+      text-decoration: none;
+    }
+    .logo i {
+      font-size: 1.8rem;
+    }
+    .logo-text {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+    .nav-menu {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+    .nav-link {
+      color: #333;
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 500;
+      padding: 0.5rem 0;
+      position: relative;
+      transition: var(--transition);
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--hfut-red);
+    }
+    .nav-link.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--hfut-red);
+    }
+    /* 移动端菜单（适配小屏幕，无错乱） */
+    .menu-btn {
+      display: none;
+      color: var(--hfut-red);
+      font-size: 1.5rem;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    .mobile-menu {
+      display: none;
+      background: var(--hfut-white);
+      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      padding: 1rem 2rem;
+    }
+    .mobile-menu.active {
+      display: block;
+    }
+    .mobile-link {
+      display: block;
+      color: #333;
+      text-decoration: none;
+      padding: 0.8rem 0;
+      border-bottom: 1px solid var(--hfut-gray);
+    }
+    .mobile-link:last-child {
+      border-bottom: none;
+    }
+
+    /* 主内容区（padding-top适配导航栏，避免遮挡） */
+    .main-content {
+      padding-top: 60px;
+    }
+
+    /* 首页（校园美景，动态轮播） */
+    .home-section {
+      height: calc(100vh - 60px);
+      position: relative;
+      overflow: hidden;
+    }
+    .carousel {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    .carousel-item {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+    .carousel-item.active {
+      opacity: 1;
+    }
+    .carousel-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .carousel-desc {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+      color: var(--hfut-white);
+      padding: 2rem;
+    }
+    .carousel-title {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .carousel-text {
+      font-size: 1rem;
+      max-width: 800px;
+    }
+    /* 轮播控制按钮 */
+    .carousel-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: var(--hfut-white/80);
+      color: var(--hfut-red);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+    .carousel-btn:hover {
+      background: var(--hfut-red);
+      color: var(--hfut-white);
+    }
+    .prev-btn {
+      left: 1rem;
+    }
+    .next-btn {
+      right: 1rem;
+    }
+
+    /* 校园地图（新增双校区切换，点击跳转景点） */
+    .map-section {
+      padding: 3rem 2rem;
+      background: var(--hfut-gray);
+    }
+    .section-title {
+      text-align: center;
+      color: var(--hfut-red);
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
+    }
+    /* 校区切换按钮 */
+    .campus-tab {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    .tab-btn {
+      padding: 0.5rem 1.5rem;
+      border: 2px solid var(--hfut-red);
+      border-radius: 30px;
+      background: transparent;
+      color: var(--hfut-red);
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .tab-btn.active {
+      background: var(--hfut-red);
+      color: var(--hfut-white);
+    }
+    .map-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: var(--hfut-white);
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.08);
+      position: relative;
+      height: 600px; /* 地图显示高度 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .campus-map {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 4px;
+    }
+    /* 地图标记点（点击就可以跳转了~） */
+    .map-point {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--hfut-red);
+      cursor: pointer;
+      transition: var(--transition);
+      z-index: 10;
+    }
+    .map-point:hover {
+      transform: scale(1.5);
+      background: #A52A2A;
+    }
+    .map-point::after {
+      content: attr(data-name);
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--hfut-red);
+      color: var(--hfut-white);
+      font-size: 0.8rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      transition: var(--transition);
+    }
+    .map-point:hover::after {
+      opacity: 1;
+    }
+
+    /* 合工大景点介绍（动态切换，点击校区地图上的坐标即可跳转） */
+    .spots-section {
+      padding: 3rem 2rem;
+    }
+    .spots-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: var(--hfut-white);
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    .spot-detail {
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .spot-img {
+      flex: 1 1 500px;
+      height: 400px;
+    }
+    .spot-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .spot-info {
+      flex: 1 1 400px;
+      padding: 2rem;
+    }
+    .spot-category {
+      display: inline-block;
+      background: var(--hfut-red/10);
+      color: var(--hfut-red);
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+    .spot-title {
+      font-size: 1.8rem;
+      color: var(--hfut-red);
+      margin-bottom: 1rem;
+    }
+    .spot-desc {
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+    .spot-meta {
+      display: flex;
+      gap: 2rem;
+      color: #666;
+    }
+    .spot-meta i {
+      color: var(--hfut-red);
+      margin-right: 0.5rem;
+    }
+    /* 景点分类标签（区分校区） */
+    .spot-campus {
+      display: inline-block;
+      background: var(--hfut-gray);
+      color: #666;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      margin-left: 0.5rem;
+    }
+
+    /* 开发者介绍：对应作业要求中的个人介绍栏目（简洁排版，无冗余） */
+    .developer-section {
+      padding: 3rem 2rem;
+      background: var(--hfut-gray);
+    }
+    .developer-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--hfut-white);
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.08);
+      padding: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 2rem;
+    }
+    .developer-avatar {
+      flex: 0 0 180px;
+      height: 180px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 4px solid var(--hfut-red/20);
+    }
+    .developer-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .developer-info {
+      flex: 1 1 300px;
+    }
+    .developer-name {
+      font-size: 1.5rem;
+      color: var(--hfut-red);
+      margin-bottom: 0.5rem;
+    }
+    .developer-major {
+      font-size: 1rem;
+      color: #666;
+      margin-bottom: 1.5rem;
+    }
+    .developer-detail {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      font-size: 0.95rem;
+    }
+    .developer-detail span {
+      display: flex;
+      align-items: center;
+    }
+    .developer-detail i {
+      color: var(--hfut-red);
+      margin-right: 0.8rem;
+      width: 16px;
+      text-align: center;
+    }
+    .social-icons {
+      margin-top: 1.5rem;
+      display: flex;
+      gap: 1rem;
+    }
+    .social-link {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--hfut-red/10);
+      color: var(--hfut-red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+    .social-link:hover {
+      background: var(--hfut-red);
+      color: var(--hfut-white);
+    }
+
+    /* 页脚 */
+    .footer {
+      background: var(--hfut-red);
+      color: var(--hfut-white);
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.9rem;
+    }
+
+    /* 响应式适配 */
+    @media (max-width: 768px) {
+      .nav-menu {
+        display: none;
+      }
+      .menu-btn {
+        display: block;
+      }
+      .motto-text {
+        font-size: 2.5rem;
+        letter-spacing: 0.2rem;
+      }
+      .spot-img {
+        height: 300px;
+      }
+      .map-container {
+        height: 400px;
+      }
+      .campus-tab {
+        gap: 1rem;
+      }
+      .tab-btn {
+        padding: 0.4rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 校训的动画（初登录闪过） -->
+  <div class="motto-animation">
+    <h1 class="motto-text">厚德 笃学 崇实 求新</h1>
+  </div>
+
+  <!-- 导航栏（简洁标题，点击跳转无错乱） -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="#home" class="logo">
+        <i class="fa fa-university"></i>
+        <span class="logo-text">合肥工业大学</span>
+      </a>
+      <!-- 桌面端导航 -->
+      <ul class="nav-menu">
+        <li><a href="#home" class="nav-link active" @click="setActiveNav('home')">首页</a></li>
+        <li><a href="#map" class="nav-link" @click="setActiveNav('map')">校园地图</a></li>
+        <li><a href="#spots" class="nav-link" @click="setActiveNav('spots')">景点介绍</a></li>
+        <li><a href="#developer" class="nav-link" @click="setActiveNav('developer')">开发者</a></li>
+      </ul>
+      <!-- 移动端菜单按钮 -->
+      <button class="menu-btn" @click="toggleMobileMenu">
+        <i class="fa fa-bars"></i>
+      </button>
+    </div>
+    <!-- 移动端导航菜单 -->
+    <div class="mobile-menu" :class="{ active: mobileMenuActive }">
+      <a href="#home" class="mobile-link" @click="toggleMobileMenu; setActiveNav('home')">首页</a>
+      <a href="#map" class="mobile-link" @click="toggleMobileMenu; setActiveNav('map')">校园地图</a>
+      <a href="#spots" class="mobile-link" @click="toggleMobileMenu; setActiveNav('spots')">景点介绍</a>
+      <a href="#developer" class="mobile-link" @click="toggleMobileMenu; setActiveNav('developer')">开发者</a>
+    </div>
+  </nav>
+
+  <!-- Vue5 主应用（核心动态逻辑，新增双校区功能） -->
+  <div id="app" class="main-content">
+    <!-- 首页（校园美景轮播，新增双校区图片） -->
+    <section id="home" class="home-section">
+      <div class="carousel">
+        <div class="carousel-item" :class="{ active: currentCarousel === index }" v-for="(item, index) in carouselList" :key="index">
+          <img :src="item.img" alt="校园美景" class="carousel-img">
+          <div class="carousel-desc">
+            <h2 class="carousel-title">{{ item.title }}</h2>
+            <p class="carousel-text">{{ item.desc }}</p>
+          </div>
+        </div>
+        <!-- 轮播控制按钮 -->
+        <button class="carousel-btn prev-btn" @click="prevCarousel">
+          <i class="fa fa-chevron-left"></i>
+        </button>
+        <button class="carousel-btn next-btn" @click="nextCarousel">
+          <i class="fa fa-chevron-right"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- 校园地图（双校区分开显示，翡翠湖校区仅保留4个指定标记点） -->
+    <section id="map" class="map-section">
+      <h2 class="section-title">校园地图</h2>
+      <!-- 校区切换按钮（屯溪路校区/翡翠湖校区） -->
+      <div class="campus-tab">
+        <button class="tab-btn" :class="{ active: currentCampus === 'tunxi' }" @click="switchCampus('tunxi')">屯溪路校区</button>
+        <button class="tab-btn" :class="{ active: currentCampus === 'feicui' }" @click="switchCampus('feicui')">翡翠湖校区</button>
+      </div>
+      <div class="map-container">
+        <!-- 屯溪路校区地图及标记点保持不变 -->
+        <img v-if="currentCampus === 'tunxi'" src="tunxi.jpg" alt="合肥工业大学屯溪路校区地图" class="campus-map">
+        <div v-if="currentCampus === 'tunxi'" class="map-point" data-name="主教学楼" style="top: 10%; left: 46.5%;" @click="goToSpot(1)"></div>
+        <div v-if="currentCampus === 'tunxi'" class="map-point" data-name="斛兵塘" style="top: 65%; left: 65%;" @click="goToSpot(2)"></div>
+        <div v-if="currentCampus === 'tunxi'" class="map-point" data-name="校史馆" style="top: 65%; left: 52%;" @click="goToSpot(3)"></div>
+        <div v-if="currentCampus === 'tunxi'" class="map-point" data-name="科技楼" style="top: 35%; left: 50%;" @click="goToSpot(8)"></div>
+        <div v-if="currentCampus === 'tunxi'" class="map-point" data-name="学术会议中心" style="top: 55%; left: 48%;" @click="goToSpot(10)"></div>
+        <div v-if="currentCampus === 'tunxi'" class="map-point" data-name="斛兵礼堂" style="top: 80%; left: 50%;" @click="goToSpot(11)"></div>
+                          
+        <!-- 翡翠湖校区仅保留4个指定标记点 -->
+        <img v-if="currentCampus === 'feicui'" src="feicui.jpg" alt="合肥工业大学翡翠湖校区地图" class="campus-map">
+<div v-if="currentCampus === 'feicui'" class="map-point" data-name="图书馆" style="top: 70%; left: 35%;" @click="goToSpot(4)"></div>
+<div v-if="currentCampus === 'feicui'" class="map-point" data-name="东风广场" style="top: 32%; left: 48%;" @click="goToSpot(5)"></div>
+<div v-if="currentCampus === 'feicui'" class="map-point" data-name="励人湖" style="top: 60%; left: 45%;" @click="goToSpot(6)"></div>
+<div v-if="currentCampus === 'feicui'" class="map-point" data-name="逸夫建筑艺术馆" style="top: 45%; left: 40%;" @click="goToSpot(7)"></div>
+      </div>
+    </section>
+
+    <!-- 景点介绍（动态切换，与双校区地图联动） -->
+    <section id="spots" class="spots-section">
+      <h2 class="section-title">校园景点</h2>
+      <div class="spots-container">
+        <div class="spot-detail" v-if="currentSpot">
+          <div class="spot-img">
+            <img :src="currentSpot.img" alt="景点图片">
+          </div>
+          <div class="spot-info">
+            <span class="spot-category">{{ currentSpot.category }}<span class="spot-campus">{{ currentSpot.campus }}</span></span>
+            <h3 class="spot-title">{{ currentSpot.name }}</h3>
+            <p class="spot-desc">{{ currentSpot.desc }}</p>
+            <div class="spot-meta">
+              <div><i class="fa fa-map-marker"></i> {{ currentSpot.location }}</div>
+              <div><i class="fa fa-clock-o"></i> {{ currentSpot.time }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 开发者介绍（保持原有内容不变） -->
+    <section id="developer" class="developer-section">
+      <h2 class="section-title">开发者介绍</h2>
+      <div class="developer-container">
+        <div class="developer-avatar">
+          <img src="开发者头像.jpg" alt="开发者头像">
+        </div>
+        <div class="developer-info">
+          <h3 class="developer-name">张静蕾</h3>
+          <p class="developer-major">合肥工业大学 · 软件学院 · 本科生</p>
+          <div class="developer-detail">
+            <span><i class="fa fa-user-circle"></i> 身份：前端开发爱好者</span>
+            <span><i class="fa fa-code"></i> 学号：2024 212 682</span>
+            <span><i class="fa fa-heart"></i> 项目初衷：展示校园之美，传承校训精神</span>
+            <span><i class="fa fa-envelope"></i> 联系方式：zhangsan@hfut.edu.cn</span>
+          </div>
+          <div class="social-icons">
+            <a href="#" class="social-link"><i class="fa fa-github"></i></a>
+            <a href="#" class="social-link"><i class="fa fa-weixin"></i></a>
+            <a href="#" class="social-link"><i class="fa fa-envelope"></i></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 页脚（保持原有内容不变） -->
+    <footer class="footer">
+      <p>合肥工业大学校园介绍网站 © 2025</p>
+      <p style="margin-top: 0.5rem; opacity: 0.8;">校训：厚德 笃学 崇实 求新 | 技术支持：Vue 3</p>
+    </footer>
+  </div>
+
+  <script>
+    // Vue 3 应用初始化（新增双校区逻辑，保留原有所有功能）
+    const { createApp } = Vue;
+    createApp({
+      data() {
+        return {
+          // 导航相关（激活状态、移动端菜单）
+          activeNav: 'home',
+          mobileMenuActive: false,
+          // 新增：双校区切换（默认显示屯溪路校区）
+          currentCampus: 'tunxi', // tunxi=屯溪路，feicui=翡翠湖
+          // 首页轮播图数据（新增双校区美景图）
+          carouselList: [
+            {
+              img: 'tunxi主教学楼.jpg',
+              title: '合工大屯溪路校区正门',
+              desc: '庄重典雅的校门，是合工大人梦想启航的起点，承载着学校的百年底蕴与育人初心。'
+            },
+            {
+              img: 'tunxi斛兵塘.jpg',
+              title: '屯溪路校区 · 斛兵塘',
+              desc: '校园内的天然明珠，相传三国曹操曾在此操练水军，塘边绿树成荫，是师生休闲治学的好去处。'
+            },
+            {
+              img: 'feicui图书馆.jpg',
+              title: '翡翠湖校区 · 图书馆',
+              desc: '现代化的图书馆，馆藏丰富，环境静谧，是翡翠湖校区学子深耕学问、追逐梦想的殿堂。'
+            },
+            {
+              img: 'feicui励人湖.jpg',
+              title: '翡翠湖校区 · 励人湖',
+              desc: '湖光山色相映，草木葱茏含韵，是翡翠湖校区最具诗意的景观，见证学子们的青春与成长。'
+            }
+          ],
+          currentCarousel: 0, // 当前轮播图索引
+          // 新增：双校区景点数据（含所有指定地点，与地图标记点一一对应）
+          spotList: [
+            // 屯溪路校区：主教学楼、斛兵塘、校史馆
+            {
+              id: 1,
+              name: '主教学楼',
+              category: '人文建筑',
+              campus: '屯溪路校区',
+              desc: '屯溪路校区主教学楼建于上世纪50年代，是学校的标志性建筑之一，红砖墙体尽显历史厚重感。楼内教室宽敞明亮，配备现代化教学设备，承担着学校大部分公共课程与专业课程的教学任务，几十年来培育了无数优秀人才，见证了学校的发展与变迁。',
+              location: '屯溪路校区南门入口处',
+              time: '8:00-22:00（工作日）',
+              img: 'tunxi主教学楼.jpg'
+            },
+            {
+              id: 2,
+              name: '斛兵塘',
+              category: '自然景观',
+              campus: '屯溪路校区',
+              desc: '斛兵塘是合肥工业大学屯溪路校区的核心景观之一，有着悠久的历史渊源。塘面开阔，水质清澈，周边绿植繁茂，四季风景各异。春季垂柳依依，夏季荷香满塘，秋季银杏泛黄，冬季静谧素雅，是师生晨读、散步、放松身心的绝佳场所，也承载着一代代合工大学子的青春记忆。',
+              location: '屯溪路校区中心区域',
+              time: '全天开放',
+              img: 'tunxi斛兵塘.jpg'
+            },
+            {
+              id: 3,
+              name: '校史馆',
+              category: '文化场馆',
+              campus: '屯溪路校区',
+              desc: '屯溪路校区校史馆是学校历史文化的重要载体，馆内收藏了大量珍贵的历史照片、文献资料、实物展品，系统展示了合肥工业大学自创办以来的发展历程、办学成就与精神传承，是了解合工大校史、感悟校训精神的重要窗口。',
+              location: '屯溪路校区西部区域',
+              time: '9:00-16:30（周三至周日，节假日闭馆）',
+              img: 'tunxi校史馆.png'
+            },
+            // 翡翠湖校区：图书馆、东风广场、励人湖、建艺馆
+            {
+              id: 4,
+              name: '图书馆',
+              category: '人文建筑',
+              campus: '翡翠湖校区',
+              desc: '翡翠湖校区图书馆是一座现代化的学术殿堂，建筑风格简约大气，馆藏纸质图书、电子文献数百万册，涵盖工、理、文、管等多个学科领域。馆内设有借阅区、自习区、研讨室、电子阅览区等功能区域，设施先进，环境舒适，为师生提供了优质的学习与研究条件。',
+              location: '翡翠湖校区东部区域',
+              time: '8:00-22:30（工作日）',
+              img: 'feicui图书馆.jpg'
+            },
+            {
+              id: 5,
+              name: '东风广场',
+              category: '休闲广场',
+              campus: '翡翠湖校区',
+              desc: '东风广场是翡翠湖校区的核心活动场所，广场开阔平坦，周边绿植环绕，配备休闲座椅、景观雕塑等设施。这里是师生举办大型活动、晨练、散步、交流的重要场地，日常氛围热闹而有序，尽显校园的活力与生机。',
+              location: '翡翠湖校区中心区域',
+              time: '全天开放',
+              img: 'feicui东风广场.jpg'
+            },
+            {
+              id: 6,
+              name: '励人湖',
+              category: '自然景观',
+              campus: '翡翠湖校区',
+              desc: '励人湖是翡翠湖校区最具代表性的自然景观之一，湖面澄澈开阔，湖边垂柳依依、草木葱茏，搭配亭台栈道，风景雅致。清晨有学子晨读，傍晚有师生漫步，是校园内放松身心、感受自然之美的绝佳去处，彰显着合工大“笃学崇实”的治学氛围。',
+              location: '翡翠湖校区南部区域',
+              time: '全天开放',
+              img: 'feicui励人湖.jpg'
+            },
+            {
+              id: 7,
+              name: '建艺馆',
+              category: '人文建筑',
+              campus: '翡翠湖校区',
+              desc: '翡翠湖校区建艺馆是建筑与艺术学院的核心教学与展示场所，建筑设计极具艺术感，融合了现代建筑美学与学术功能。馆内设有设计展厅、绘图教室、学术报告厅等，不仅是师生开展教学、科研、创作的场地，也经常举办各类艺术展览，彰显学校的艺术底蕴与创新精神。',
+              location: '翡翠湖校区西部区域',
+              time: '8:30-21:30（工作日）',
+              img: 'feicui建艺馆.jpg'
+            },
+            // 屯溪路校区其他景点
+            {
+              id: 8,
+              name: '科技楼',
+              category: '学术中心',
+              campus: '屯溪路校区',
+              desc: '屯溪路校区的科技楼是集教学、科研、实验于一体的综合性建筑，作为校区内重要的工科教学与科研载体，它承载着学校在机械、电气、材料等优势学科的实践教学与创新研究功能。',
+              location: '屯溪路校区中部区域',
+              time: '8:00-22:00（工作日）',
+              img: 'tunxi科技楼.jpg'
+            },
+            
+            {
+              id: 10,
+              name: '学术会议中心',
+              category: '人文建筑',
+              campus: '屯溪路校区',
+              desc: '屯溪路校区学术会议中心是学校举办各类学术讲座、会议、论坛的重要场所，设施先进，环境庄重，见证了无数学术思想的碰撞与交流，为学校的学术发展提供了重要平台。',
+              location: '屯溪路校区东北部区域',
+              time: '8:00-22:00（工作日）',
+              img: 'tunxi学术会议中心.jpg'
+            },
+            {
+              id: 11,
+              name: '斛兵礼堂',
+              category: '文化场馆',
+              campus: '屯溪路校区',
+              desc: '斛兵礼堂是屯溪路校区的标志性文化建筑，内部装修典雅，音响效果一流，是学校举办文艺演出、报告讲座、颁奖典礼等重要活动的场所，承载着丰富的校园文化记忆。',
+              location: '屯溪路校区中心区域',
+              time: '根据活动安排开放',
+              img: 'tunxi斛兵礼堂.jpg'
+            }
+          ],
+          currentSpot: null // 当前展示的景点
+        };
+      },
+      mounted() {
+        // 初始化：默认显示第一个轮播图、第一个景点（屯溪路校区主教学楼）
+        this.currentSpot = this.spotList[0];
+        // 自动轮播（5秒切换一次）
+        this.carouselTimer = setInterval(() => this.nextCarousel(), 5000);
+        // 监听滚动，同步导航激活状态
+        window.addEventListener('scroll', this.syncNavActive);
+      },
+      beforeUnmount() {
+        // 清除轮播定时器
+        clearInterval(this.carouselTimer);
+        window.removeEventListener('scroll', this.syncNavActive);
+      },
+      methods: {
+        // 导航激活状态设置（保留原有）
+        setActiveNav(navName) {
+          this.activeNav = navName;
+        },
+        // 同步滚动时的导航激活状态（保留原有）
+        syncNavActive() {
+          const sections = ['home', 'map', 'spots', 'developer'];
+          sections.forEach(section => {
+            const el = document.getElementById(section);
+            if (el) {
+              const rect = el.getBoundingClientRect();
+              if (rect.top <= 100 && rect.bottom >= 100) {
+                this.activeNav = section;
+              }
+            }
+          });
+        },
+        // 移动端菜单切换（保留原有）
+        toggleMobileMenu() {
+          this.mobileMenuActive = !this.mobileMenuActive;
+        },
+        // 轮播图：上一张（保留原有）
+        prevCarousel() {
+          this.currentCarousel = (this.currentCarousel - 1 + this.carouselList.length) % this.carouselList.length;
+        },
+        // 轮播图：下一张（保留原有）
+        nextCarousel() {
+          this.currentCarousel = (this.currentCarousel + 1) % this.carouselList.length;
+        },
+        // 新增：双校区切换方法
+        switchCampus(campus) {
+          this.currentCampus = campus;
+          // 切换校区时，默认显示该校区第一个景点
+          if (campus === 'tunxi') {
+            this.currentSpot = this.spotList[0]; // 屯溪路校区第一个景点：主教学楼
+          } else {
+            this.currentSpot = this.spotList[3]; // 翡翠湖校区第一个景点：图书馆
+          }
+        },
+        // 地图标记点：跳转至对应景点（优化适配双校区，保留原有逻辑）
+        goToSpot(spotId) {
+          const spot = this.spotList.find(item => item.id === spotId);
+          if (spot) {
+            this.currentSpot = spot;
+            // 滚动到景点介绍区域
+            document.getElementById('spots').scrollIntoView({ behavior: 'smooth' });
+            // 同步导航激活状态
+            this.setActiveNav('spots');
+            // 同步切换校区（点击景点标记，自动切换到对应校区地图）
+            this.currentCampus = spot.campus === '屯溪路校区' ? 'tunxi' : 'feicui';
+          }
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
